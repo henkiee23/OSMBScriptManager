@@ -21,10 +21,7 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup>
-    <!-- Include any fonts placed under Resources/Fonts as Avalonia resources -->
-    <AvaloniaResource Include="Resources\Fonts\**\*.*" />
-  </ItemGroup>
+  <!-- Fonts not used anymore; removed AvaloniaResource include for Resources/Fonts -->
   <ItemGroup>
     <!-- Application icon: place your .ico here -->
     <None Include="Resources\app.ico" Pack="false" Visible="false" />

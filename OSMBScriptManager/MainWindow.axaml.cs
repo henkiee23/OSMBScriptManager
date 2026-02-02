@@ -114,18 +114,7 @@ public partial class MainWindow : Window
         var deleteBtn = this.FindControl<Button>("DeleteInstalledButton");
         if (deleteBtn != null) deleteBtn.Click += DeleteInstalledButton_Click;
 
-        // Show font registration report (if any) in the status area for diagnostics
-        try
-        {
-            var report = Application.Current?.Resources?[(object)"FontRegistrationReport"] as string;
-            if (!string.IsNullOrEmpty(report))
-            {
-                SetStatus("Fonts: " + report);
-                // keep it visible briefly then clear
-                _ = Task.Run(async () => { await Task.Delay(3000); ClearStatus(); });
-            }
-        }
-        catch { }
+        // Font registration diagnostics removed.
 
         // save target dir when user edits the textbox
         this.FindControl<TextBox>("TargetDirTextBox")!.LostFocus += TargetDirTextBox_LostFocus;
