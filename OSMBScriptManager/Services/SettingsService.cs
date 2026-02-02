@@ -17,6 +17,10 @@ public class Settings
     public string TargetDirectory { get; set; } = string.Empty;
     public bool FollowSystemTheme { get; set; } = true;
     public ThemePreference PreferredTheme { get; set; } = ThemePreference.System;
+    // Do not check for updates automatically when true
+    public bool EnableAutoUpdateCheck { get; set; } = true;
+    // If set to a release tag (e.g. "v1.2.3"), updates matching this tag will be skipped
+    public string SkipUpdateVersion { get; set; } = string.Empty;
 }
 
 public class SettingsService

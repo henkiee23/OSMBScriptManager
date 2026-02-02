@@ -11,6 +11,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Reflection;
+using System.Diagnostics;
+using OSMBScriptManager.Views;
+using System.Net.Http;
 
 namespace OSMBScriptManager;
 
@@ -23,6 +27,7 @@ public partial class MainWindow : Window
     private Dictionary<string, string> _savedState = new();
     private List<ScriptDeveloper> _developers = new();
     private readonly Dictionary<string, List<TrackedScript>> _repoJars = new();
+    private readonly AutoUpdateService _updateService = new();
 
     public MainWindow()
     {
@@ -100,6 +105,15 @@ public partial class MainWindow : Window
         var browse = this.FindControl<Button>("BrowseButton")!;
         browse.Click += BrowseButton_Click;
 
+        var fetchBtn = this.FindControl<Button>("FetchButton");
+        if (fetchBtn != null) fetchBtn.Click += FetchButton_Click;
+
+        var installBtn = this.FindControl<Button>("InstallButton");
+        if (installBtn != null) installBtn.Click += DownloadButton_Click;
+
+        var deleteBtn = this.FindControl<Button>("DeleteInstalledButton");
+        if (deleteBtn != null) deleteBtn.Click += DeleteInstalledButton_Click;
+
         // Show font registration report (if any) in the status area for diagnostics
         try
         {
@@ -124,11 +138,7 @@ public partial class MainWindow : Window
         var devList = this.FindControl<ListBox>("DevelopersListBox")!;
         devList.SelectionChanged += DevelopersListBox_SelectionChanged;
 
-        // wire developer management buttons
-        this.FindControl<Button>("AddDevButton")!.Click += AddDevButton_Click;
-        this.FindControl<Button>("UpdateDevButton")!.Click += UpdateDevButton_Click;
-        this.FindControl<Button>("RemoveDevButton")!.Click += RemoveDevButton_Click;
-        this.FindControl<Button>("SaveDevsButton")!.Click += SaveDevsButton_Click;
+        // developer repos are read-only in the UI; editing removed
 
         // wire settings controls
         var followCb = this.FindControl<CheckBox>("FollowSystemThemeCheckBox");
@@ -158,6 +168,8 @@ public partial class MainWindow : Window
 
         // start background fetch of all repos (cache only)
         _ = Task.Run(async () => await BackgroundFetchAllReposAsync());
+
+        // update check is handled at startup in App; do not run it again here.
     }
 
     private void PopulateDevelopersList()
@@ -171,63 +183,10 @@ public partial class MainWindow : Window
         var devList = this.FindControl<ListBox>("DevelopersListBox")!;
         if (devList.SelectedIndex < 0) return;
         var dev = _developers[devList.SelectedIndex];
-        // populate edit fields
-        this.FindControl<TextBox>("DevNameTextBox")!.Text = dev.Name;
-        this.FindControl<TextBox>("DevRepoTextBox")!.Text = dev.RepoUrl;
-        this.FindControl<TextBox>("DevRegexTextBox")!.Text = dev.PathRegex;
-
         await LoadJarsForDeveloperAsync(dev);
     }
 
-    private async void AddDevButton_Click(object? sender, RoutedEventArgs e)
-    {
-        var name = this.FindControl<TextBox>("DevNameTextBox")!.Text?.Trim() ?? string.Empty;
-        var repo = this.FindControl<TextBox>("DevRepoTextBox")!.Text?.Trim() ?? string.Empty;
-        var regex = this.FindControl<TextBox>("DevRegexTextBox")!.Text?.Trim() ?? ".*\\.jar$";
-        if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(repo))
-            return;
-
-        var dev = new ScriptDeveloper { Name = name, RepoUrl = repo, PathRegex = regex };
-        _developers.Add(dev);
-        PopulateDevelopersList();
-        await _devConfig.SaveAsync(_developers);
-    }
-
-    private async void UpdateDevButton_Click(object? sender, RoutedEventArgs e)
-    {
-        var devList = this.FindControl<ListBox>("DevelopersListBox")!;
-        if (devList.SelectedIndex < 0) return;
-        var idx = devList.SelectedIndex;
-        var name = this.FindControl<TextBox>("DevNameTextBox")!.Text?.Trim() ?? string.Empty;
-        var repo = this.FindControl<TextBox>("DevRepoTextBox")!.Text?.Trim() ?? string.Empty;
-        var regex = this.FindControl<TextBox>("DevRegexTextBox")!.Text?.Trim() ?? ".*\\.jar$";
-        if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(repo))
-            return;
-
-        _developers[idx].Name = name;
-        _developers[idx].RepoUrl = repo;
-        _developers[idx].PathRegex = regex;
-        PopulateDevelopersList();
-        await _devConfig.SaveAsync(_developers);
-    }
-
-    private async void RemoveDevButton_Click(object? sender, RoutedEventArgs e)
-    {
-        var devList = this.FindControl<ListBox>("DevelopersListBox")!;
-        if (devList.SelectedIndex < 0) return;
-        var idx = devList.SelectedIndex;
-        _developers.RemoveAt(idx);
-        PopulateDevelopersList();
-        this.FindControl<TextBox>("DevNameTextBox")!.Text = string.Empty;
-        this.FindControl<TextBox>("DevRepoTextBox")!.Text = string.Empty;
-        this.FindControl<TextBox>("DevRegexTextBox")!.Text = ".*\\.jar$";
-        await _devConfig.SaveAsync(_developers);
-    }
-
-    private async void SaveDevsButton_Click(object? sender, RoutedEventArgs e)
-    {
-        await _devConfig.SaveAsync(_developers);
-    }
+    // Developer editing is disabled; repository list is read-only in the UI.
 
     private async void RefreshInstalledButton_Click(object? sender, RoutedEventArgs e)
     {
@@ -342,6 +301,53 @@ public partial class MainWindow : Window
         await ScanInstalledPluginsAsync();
     }
 
+    private async void DeleteInstalledButton_Click(object? sender, RoutedEventArgs e)
+    {
+        var installedList = this.FindControl<ListBox>("InstalledListBox")!;
+        var toDelete = installedList.Items?.Cast<object>().OfType<InstalledScript>().Where(p => p.IsSelected).ToList() ?? new List<InstalledScript>();
+        if (toDelete.Count == 0)
+        {
+            SetStatus("No installed scripts selected to delete.");
+            return;
+        }
+
+        var target = this.FindControl<TextBox>("TargetDirTextBox")!.Text;
+        if (string.IsNullOrEmpty(target) || !Directory.Exists(target))
+        {
+            SetStatus("Please set a valid target directory before deleting.");
+            return;
+        }
+
+        int deleted = 0;
+        foreach (var p in toDelete)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(p.FullPath) && File.Exists(p.FullPath))
+                {
+                    File.Delete(p.FullPath);
+                    deleted++;
+                }
+
+                // remove saved state if tracked
+                if (!string.IsNullOrEmpty(p.RepoUrl) && !string.IsNullOrEmpty(p.RelativePath))
+                {
+                    var key = StateKey(p.RepoUrl, p.RelativePath);
+                    if (_savedState.ContainsKey(key)) _savedState.Remove(key);
+                }
+            }
+            catch (Exception ex)
+            {
+                // continue on errors but report
+                SetStatus("Error deleting " + p.FileName + ": " + ex.Message);
+            }
+        }
+
+        await _persistence.SaveStateAsync(_savedState);
+        await ScanInstalledPluginsAsync();
+        SetStatus($"Deleted {deleted} file(s).");
+    }
+
     private async Task BackgroundFetchAllReposAsync()
     {
         int total = _developers.Count;
@@ -367,6 +373,74 @@ public partial class MainWindow : Window
         }
 
         ClearStatus();
+    }
+
+    private string GetCurrentVersionString()
+    {
+        try
+        {
+            var asm = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
+            var fvi = FileVersionInfo.GetVersionInfo(asm.Location);
+            if (!string.IsNullOrEmpty(fvi.ProductVersion)) return fvi.ProductVersion;
+            var v = asm.GetName().Version;
+            return v?.ToString() ?? "0.0.0";
+        }
+        catch
+        {
+            return "0.0.0";
+        }
+    }
+
+    private static Version? NormalizeVersion(string tagOrVersion)
+    {
+        if (string.IsNullOrEmpty(tagOrVersion)) return null;
+        var t = tagOrVersion.Trim();
+        if (t.StartsWith("v", StringComparison.OrdinalIgnoreCase)) t = t.Substring(1);
+        if (Version.TryParse(t, out var v)) return v;
+        return null;
+    }
+
+    private async Task CheckForUpdatesAsync()
+    {
+        try
+        {
+            var info = await _updateService.GetLatestReleaseAsync("henkiee23", "OSMBScriptManager");
+            if (info == null || string.IsNullOrEmpty(info.AssetUrl)) return;
+
+            var latest = NormalizeVersion(info.TagName);
+            var current = NormalizeVersion(GetCurrentVersionString());
+            if (latest == null) return;
+            if (current != null && latest <= current) return; // not newer
+
+            // ask user on UI thread
+            await Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                try
+                {
+                    var dialog = new UpdateDialog("Update available", $"A new version ({info.TagName}) is available. Install now?", info.TagName);
+                    var res = await dialog.ShowDialogAsync(this);
+                    if (res == true)
+                    {
+                        SetStatus("Downloading update...", indeterminate: true);
+                        var tmp = Path.Combine(Path.GetTempPath(), info.AssetName ?? ("osmb-update-" + info.TagName + ".exe"));
+                        await _updateService.DownloadAssetAsync(info.AssetUrl, tmp, new Progress<double>(p => { /* could update UI */ }));
+                        SetStatus("Launching installer...", indeterminate: true);
+                        try
+                        {
+                            Process.Start(new ProcessStartInfo(tmp) { UseShellExecute = true });
+                        }
+                        catch { }
+                        // shutdown app to allow installer to run
+                        try { Close(); } catch { }
+                    }
+                }
+                catch { }
+            });
+        }
+        catch
+        {
+            // ignore update errors
+        }
     }
 
     private async Task LoadJarsForDeveloperAsync(ScriptDeveloper dev)
@@ -617,16 +691,29 @@ public partial class MainWindow : Window
             jarsList.ItemsSource = new List<TrackedScript> { new TrackedScript { RelativePath = "Please choose a target directory first." } };
             return;
         }
+        var installBtn = this.FindControl<Button>("InstallButton");
+        if (installBtn != null) installBtn.IsEnabled = false;
 
         var jarsList2 = this.FindControl<ListBox>("JarsListBox")!;
         var jarsItems = jarsList2.Items?.Cast<object>().OfType<TrackedScript>().Where(j => j.IsSelected).ToList() ?? new List<TrackedScript>();
-        foreach (var jar in jarsItems)
+        int total = jarsItems.Count;
+        if (total == 0)
         {
+            SetStatus("No scripts selected.");
+            if (installBtn != null) installBtn.IsEnabled = true;
+            return;
+        }
+
+        for (int i = 0; i < total; i++)
+        {
+            var jar = jarsItems[i];
             try
             {
+                SetStatus($"Installing {Path.GetFileName(jar.RelativePath)} ({i + 1}/{total})", indeterminate: false, progress: (double)(i) / Math.Max(1, total));
                 await _gitService.DownloadJarAsync(jar.RepoUrl, jar.RelativePath, target);
                 // update saved state to this commit
                 _savedState[StateKey(jar.RepoUrl, jar.RelativePath)] = jar.CommitId ?? string.Empty;
+                SetStatus($"Installed {Path.GetFileName(jar.RelativePath)} ({i + 1}/{total})", indeterminate: false, progress: (double)(i + 1) / Math.Max(1, total));
             }
             catch (Exception ex)
             {
@@ -634,6 +721,7 @@ public partial class MainWindow : Window
                 var list = jarsList2.Items?.Cast<object>().ToList() ?? new List<object>();
                 list.Add(new TrackedScript { RelativePath = "Download error: " + ex.Message });
                 jarsList2.ItemsSource = list.Cast<TrackedScript>().ToList();
+                SetStatus("Error installing: " + ex.Message);
             }
         }
 
@@ -642,5 +730,8 @@ public partial class MainWindow : Window
         var devList = this.FindControl<ListBox>("DevelopersListBox")!;
         if (devList.SelectedIndex >= 0)
             await LoadJarsForDeveloperAsync(_developers[devList.SelectedIndex]);
+
+        SetStatus($"Installed {total} script(s).", indeterminate: false, progress: 1);
+        if (installBtn != null) installBtn.IsEnabled = true;
     }
 }
