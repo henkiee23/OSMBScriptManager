@@ -1,0 +1,149 @@
+<Window xmlns="https://github.com/avaloniaui"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                xmlns:models="clr-namespace:OSMBScriptManager.Models"
+                xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="600"
+                x:Class="OSMBScriptManager.MainWindow"
+                Title="OSMBScriptManager">
+    <Grid RowDefinitions="Auto, *, Auto">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="12" Spacing="8" VerticalAlignment="Center">
+            <TextBlock Text="Target folder:" VerticalAlignment="Center"/>
+            <TextBox Name="TargetDirTextBox" Width="440" />
+            <Button Name="BrowseButton" Content="Browse..." ToolTip.Tip="Select target plugins folder"/>
+        </StackPanel>
+
+        <TabControl Grid.Row="1" Margin="8">
+            <TabItem Header="Installed Plugins">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,8" Spacing="8">
+                        <Button Name="RefreshInstalledButton">
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <TextBlock FontFamily="{DynamicResource IconFontFamily}" Text="{DynamicResource IconRefresh}" VerticalAlignment="Center"/>
+                                <TextBlock Text="Refresh" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Name="UpdateInstalledButton">
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <TextBlock FontFamily="{DynamicResource IconFontFamily}" Text="{DynamicResource IconDownload}" VerticalAlignment="Center"/>
+                                <TextBlock Text="Update Selected" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Name="UpdateAllInstalledButton">
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <TextBlock FontFamily="{DynamicResource IconFontFamily}" Text="{DynamicResource IconCloud}" VerticalAlignment="Center"/>
+                                <TextBlock Text="Update All" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <ListBox Grid.Row="1" Name="InstalledListBox" ScrollViewer.VerticalScrollBarVisibility="Auto" Margin="0,0,0,4">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:InstalledPlugin">
+                                <Border CornerRadius="6" Margin="0,6" Padding="10">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="3*"/>
+                                            <ColumnDefinition Width="2*"/>
+                                            <ColumnDefinition Width="3*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding FileName}" VerticalAlignment="Center" Margin="8,0"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding Status}" VerticalAlignment="Center" Margin="8,0"/>
+                                        <TextBlock Grid.Column="3" Text="{Binding RepoUrl}" VerticalAlignment="Center" Margin="8,0"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Repositories">
+                <Grid ColumnDefinitions="2*,5*">
+                    <Border Grid.Column="0" Padding="12" CornerRadius="6" Margin="8">
+                        <StackPanel Spacing="8">
+                            <TextBlock Classes="header" Text="Plugin Developers"/>
+                            <ListBox Name="DevelopersListBox" Height="260"/>
+
+                            <TextBlock Text="Name" Margin="0,8,0,0"/>
+                            <TextBox Name="DevNameTextBox"/>
+                            <TextBlock Text="Repository URL" Margin="0,8,0,0"/>
+                            <TextBox Name="DevRepoTextBox"/>
+                            <TextBlock Text="Path regex" Margin="0,8,0,0"/>
+                            <TextBox Name="DevRegexTextBox" Text=".*\.jar$"/>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0" Spacing="8">
+                                <Button Name="AddDevButton" Content="Add" />
+                                <Button Name="UpdateDevButton" Content="Update" />
+                                <Button Name="RemoveDevButton" Content="Remove" />
+                                <Button Name="SaveDevsButton" Content="Save" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid Margin="8" Grid.Column="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Classes="header" Text="Available Plugins"/>
+
+                        <ListBox Grid.Row="1" Name="JarsListBox" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:TrackedJar">
+                                    <Border CornerRadius="6" Margin="0,6" Padding="10">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="5*"/>
+                                                <ColumnDefinition Width="2*"/>
+                                                <ColumnDefinition Width="2*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding RelativePath}" VerticalAlignment="Center" Margin="8,0"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding CommitId}" VerticalAlignment="Center" Margin="8,0"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding Status}" VerticalAlignment="Center" Margin="8,0"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Settings">
+                <ScrollViewer>
+                    <StackPanel Margin="12" Spacing="8">
+                        <TextBlock Classes="header" Text="Appearance"/>
+                        <CheckBox Name="FollowSystemThemeCheckBox" Content="Follow system theme" />
+
+                        <StackPanel Orientation="Horizontal" Margin="0,8" VerticalAlignment="Center" Spacing="8">
+                            <TextBlock Text="Preferred theme:" VerticalAlignment="Center"/>
+                            <ComboBox Name="ThemeComboBox" Width="120">
+                                <ComboBoxItem Content="Light"/>
+                                <ComboBoxItem Content="Dark"/>
+                            </ComboBox>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+        <Border Grid.Row="2" Padding="8" Margin="8,0,8,8" CornerRadius="4">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
+                <TextBlock Name="StatusText" VerticalAlignment="Center" />
+                <ProgressBar Name="TaskProgressBar" Width="200" Height="16" Margin="12,0,0,0" Minimum="0" Maximum="1" IsVisible="False"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

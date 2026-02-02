@@ -1,0 +1,17 @@
+# Normalize line endings and mark common binary files
+* text=auto
+*.cs     text
+*.xaml   text
+*.csproj text
+*.sln    text
+
+# Treat fonts and binaries as binary to avoid EOL conversions
+*.otf binary
+*.ttf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.dll binary
+*.exe binary
+*.jar binary

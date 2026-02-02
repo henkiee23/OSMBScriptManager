@@ -1,0 +1,69 @@
+## Visual Studio / .NET standard ignores
+## See https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
+
+# Build Folders
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+
+# Rider/IDE
+.idea/
+.vscode/
+
+# NuGet
+*.nupkg
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Visual Studio profiler
+*.psess
+*.vsp
+*.vspx
+
+# Test results
+TestResults/
+*.trx
+
+# Publish output
+publish/
+*.Publish.xml
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Resharper
+*.DotSettings.user
+
+# Coverage
+.coverage
+.coveragexml
+
+# .NET Core
+project.assets.json
+*.runtimeconfig.dev.json
+
+# JetBrains Rider
+.idea/
+
+# Fonts / binary assets (keep in repo but treat as binary)
+*.otf
+*.ttf
+
+# Packages
+*.nupkg
+
+# Ignore build artifacts from examples/tests
+**/bin/
+**/obj/
