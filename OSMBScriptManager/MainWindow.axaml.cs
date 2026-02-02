@@ -23,7 +23,6 @@ public partial class MainWindow : Window
     private Dictionary<string, string> _savedState = new();
     private List<PluginDeveloper> _developers = new();
     private readonly Dictionary<string, List<TrackedJar>> _repoJars = new();
-    private bool _taskIndeterminate = false;
 
     public MainWindow()
     {
