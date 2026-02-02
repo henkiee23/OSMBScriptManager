@@ -6,6 +6,7 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <ApplicationIcon>Resources\app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,5 +24,10 @@
   <ItemGroup>
     <!-- Include any fonts placed under Resources/Fonts as Avalonia resources -->
     <AvaloniaResource Include="Resources\Fonts\**\*.*" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Application icon: place your .ico here -->
+    <None Include="Resources\app.ico" Pack="false" Visible="false" />
+    <AvaloniaResource Include="Resources\app.ico" />
   </ItemGroup>
 </Project>
