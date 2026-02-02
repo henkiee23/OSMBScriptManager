@@ -12,7 +12,8 @@ on:
 
 jobs:
   build-release:
-    runs-on: windows-latest
+    # Run on your self-hosted Windows runner. Labels can be adjusted to match your runner's labels.
+    runs-on: [self-hosted, windows]
     permissions:
       contents: write
     env:
