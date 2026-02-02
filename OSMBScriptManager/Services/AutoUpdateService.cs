@@ -17,10 +17,17 @@ public class ReleaseInfo
 
 public class AutoUpdateService
 {
-    private readonly HttpClient _http = new()
+    private readonly HttpClient _http;
+
+    public AutoUpdateService() : this(new HttpClient()) { }
+
+    // Allow injecting a custom HttpClient for testing
+    public AutoUpdateService(HttpClient client)
     {
-        DefaultRequestHeaders = { { "User-Agent", "OSMBScriptManager-Updater" } }
-    };
+        _http = client ?? throw new ArgumentNullException(nameof(client));
+        if (!_http.DefaultRequestHeaders.Contains("User-Agent"))
+            _http.DefaultRequestHeaders.Add("User-Agent", "OSMBScriptManager-Updater");
+    }
 
     public async Task<ReleaseInfo?> GetLatestReleaseAsync(string owner, string repo)
     {

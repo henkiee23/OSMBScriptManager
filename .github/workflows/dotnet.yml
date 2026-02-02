@@ -36,8 +36,36 @@ jobs:
 
     - name: Build
       run: dotnet build ./OSMBScriptManager/OSMBScriptManager.csproj -c Release --no-restore
-
     - name: Test (if present)
-      shell: bash
+      shell: pwsh
       run: |
-        if dotnet test --no-build --verbosity normal; then echo "Tests passed"; fi
+        $testProjects = Get-ChildItem -Recurse -Filter *Tests*.csproj -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName -ErrorAction SilentlyContinue
+        if (-not $testProjects) {
+          Write-Host "No test projects found (pattern *Tests*.csproj). Skipping tests."
+        } else {
+          New-Item -ItemType Directory -Path TestResults -ErrorAction SilentlyContinue | Out-Null
+          foreach ($p in $testProjects) {
+            dotnet test $p --configuration Release --no-build --logger "trx;LogFileName=$(Split-Path $p -Leaf)-results.trx"
+          }
+        }
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: |
+          **/*-results.trx
+
+    - name: Publish single-file win-x64 artifact
+      if: success()
+      shell: pwsh
+      run: |
+        dotnet publish ./OSMBScriptManager/OSMBScriptManager.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:PublishTrimmed=false -o ./publish/win-x64
+
+    - name: Upload published artifact
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: publish-win-x64
+        path: publish/win-x64
