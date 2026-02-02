@@ -155,21 +155,58 @@ public partial class App : Application
                         return;
                     }
 
-                    var info = await updater.GetLatestReleaseAsync("henkiee23", "OSMBScriptManager");
-                    if (info == null || string.IsNullOrEmpty(info.AssetUrl))
+                    ReleaseInfo? info = null;
+
+                    if (IsDevelopmentBuild())
                     {
-                        // no release info -> continue
+                        // development builds (local VS/VSCode runs) should not prompt for updates
+                        await Dispatcher.UIThread.InvokeAsync(() => splash.SetStatus("Development build — skipping update check", indeterminate: false));
+                        await Task.Delay(600);
+                        info = null;
                     }
-                    else if (!string.IsNullOrEmpty(settings.SkipUpdateVersion) && settings.SkipUpdateVersion == info.TagName)
+                    else
                     {
-                        // user chose to skip this version previously
+                        info = await updater.GetLatestReleaseAsync("henkiee23", "OSMBScriptManager");
+                        if (info == null || string.IsNullOrEmpty(info.AssetUrl))
+                        {
+                            // no release info -> continue
+                            info = null;
+                        }
+                        else
+                        {
+                            // respect user's skipped version
+                            if (!string.IsNullOrEmpty(settings.SkipUpdateVersion) && settings.SkipUpdateVersion == info.TagName)
+                            {
+                                info = null;
+                            }
+                            else
+                            {
+                                // compare versions: skip if latest is not newer than current
+                                var currentVer = GetCurrentVersionString();
+                                var latestTag = info.TagName ?? string.Empty;
+                                if (!string.IsNullOrEmpty(latestTag))
+                                {
+                                    var cmp = CompareVersionStrings(latestTag, currentVer);
+                                    if (cmp <= 0)
+                                    {
+                                        // latest is older or equal -> do not prompt
+                                        info = null;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (info == null)
+                    {
+                        // nothing to do, continue to main UI
                     }
                     else
                     {
                         // prompt user on UI thread
                         var dlg = await Dispatcher.UIThread.InvokeAsync(async () =>
                         {
-                            var d = new UpdateDialog("Update available", $"A new version ({info.TagName}) is available. Install now?", info.TagName);
+                            var d = new UpdateDialog("Update available", $"A new version ({info.TagName}) is available. Install now?", info.TagName ?? string.Empty);
                             await d.ShowDialogAsync(splash);
                             return d;
                         });
@@ -185,7 +222,7 @@ public partial class App : Application
                         if (accepted)
                         {
                             // attempt download with progress and retries
-                            var tmp = System.IO.Path.Combine(System.IO.Path.GetTempPath(), info.AssetName ?? ("osmb-update-" + info.TagName + ".exe"));
+                            var tmp = System.IO.Path.Combine(System.IO.Path.GetTempPath(), info.AssetName ?? ("osmb-update-" + (info.TagName ?? "new") + ".exe"));
                             int attempts = 0;
                             const int maxAttempts = 3;
                             bool downloaded = false;
@@ -206,7 +243,7 @@ public partial class App : Application
                                     var retryDlg = await Dispatcher.UIThread.InvokeAsync(async () =>
                                     {
                                         var msg = "Download failed. Retry?";
-                                        var rd = new UpdateDialog("Download failed", msg, info.TagName);
+                                        var rd = new UpdateDialog("Download failed", msg, info.TagName ?? string.Empty);
                                         await rd.ShowDialogAsync(splash);
                                         return rd;
                                     });
@@ -261,5 +298,70 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private static string GetCurrentVersionString()
+    {
+        try
+        {
+            var asm = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
+            var fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(asm.Location);
+            if (!string.IsNullOrEmpty(fvi.ProductVersion)) return fvi.ProductVersion;
+            var v = asm.GetName().Version;
+            return v?.ToString() ?? "0.0.0";
+        }
+        catch
+        {
+            return "0.0.0";
+        }
+    }
+
+    private static int CompareVersionStrings(string a, string b)
+    {
+        // parse numeric major.minor.patch components, ignore extras
+        int[] Parse(string s)
+        {
+            var nums = new int[3];
+            if (string.IsNullOrEmpty(s)) return nums;
+            s = s.Trim();
+            if (s.StartsWith("v", StringComparison.OrdinalIgnoreCase)) s = s.Substring(1);
+            var parts = s.Split(new[] {'.','-'}, StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i < Math.Min(3, parts.Length); i++)
+            {
+                if (int.TryParse(parts[i], out var n)) nums[i] = n;
+            }
+            return nums;
+        }
+
+        var A = Parse(a);
+        var B = Parse(b);
+        for (int i = 0; i < 3; i++)
+        {
+            if (A[i] < B[i]) return -1;
+            if (A[i] > B[i]) return 1;
+        }
+        return 0;
+    }
+
+    private static bool IsDevelopmentBuild()
+    {
+        try
+        {
+            var s = GetCurrentVersionString();
+            if (string.IsNullOrEmpty(s)) return true;
+            var t = s.Trim();
+            if (t.StartsWith("v", StringComparison.OrdinalIgnoreCase)) t = t.Substring(1);
+            if (t == "0.0.0" || t == "0.0.0.0" || t == "0.0") return true;
+            if (Version.TryParse(t, out var v))
+            {
+                return v.Major == 0 && v.Minor == 0 && (v.Build == 0 || v.Build == -1);
+            }
+            // if we cannot parse a reasonable version, treat as development
+            return true;
+        }
+        catch
+        {
+            return true;
+        }
     }
 }

@@ -166,6 +166,29 @@ public partial class MainWindow : Window
             };
         }
 
+        // show current app version in settings
+        try
+        {
+            var versionTb = this.FindControl<TextBlock>("VersionTextBlock");
+            if (versionTb != null)
+            {
+                var cur = GetCurrentVersionString();
+                var parsed = NormalizeVersion(cur);
+                var isDev = false;
+                if (parsed != null)
+                    isDev = parsed.Major == 0 && parsed.Minor == 0 && (parsed.Build == 0 || parsed.Build == -1);
+                else
+                {
+                    var t = cur ?? string.Empty;
+                    if (t.StartsWith("v", StringComparison.OrdinalIgnoreCase)) t = t.Substring(1);
+                    isDev = string.IsNullOrEmpty(t) || t == "0.0.0" || t == "0.0.0.0";
+                }
+
+                versionTb.Text = "Version: " + cur + (isDev ? " (development build — auto-update disabled)" : string.Empty);
+            }
+        }
+        catch { }
+
         // start background fetch of all repos (cache only)
         _ = Task.Run(async () => await BackgroundFetchAllReposAsync());
 
