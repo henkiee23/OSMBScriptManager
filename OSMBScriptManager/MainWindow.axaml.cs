@@ -21,8 +21,8 @@ public partial class MainWindow : Window
     private readonly DeveloperConfigService _devConfig = new();
     private readonly SettingsService _settingsService = new();
     private Dictionary<string, string> _savedState = new();
-    private List<PluginDeveloper> _developers = new();
-    private readonly Dictionary<string, List<TrackedJar>> _repoJars = new();
+    private List<ScriptDeveloper> _developers = new();
+    private readonly Dictionary<string, List<TrackedScript>> _repoJars = new();
 
     public MainWindow()
     {
@@ -55,12 +55,12 @@ public partial class MainWindow : Window
         else
         {
             // fallback sample
-            _developers = new List<PluginDeveloper>
+            _developers = new List<ScriptDeveloper>
             {
-                new PluginDeveloper { Name = "JustDavyy", RepoUrl = "https://github.com/JustDavyy/osmb-scripts.git", PathRegex = ".*\\.jar$" },
-                new PluginDeveloper { Name = "Butter", RepoUrl = "https://github.com/ButterB21/Butter-Scripts.git", PathRegex = ".*\\.jar$" },
-                new PluginDeveloper { Name = "Jose", RepoUrl = "https://github.com/joseOSMB/JOSE-OSMB-SCRIPTS.git", PathRegex = ".*\\.jar$" },
-                new PluginDeveloper { Name = "Fru", RepoUrl = "https://github.com/fru-art/fru-scripts.git", PathRegex = ".*\\.jar$" }
+                new ScriptDeveloper { Name = "JustDavyy", RepoUrl = "https://github.com/JustDavyy/osmb-scripts.git", PathRegex = ".*\\.jar$" },
+                new ScriptDeveloper { Name = "Butter", RepoUrl = "https://github.com/ButterB21/Butter-Scripts.git", PathRegex = ".*\\.jar$" },
+                new ScriptDeveloper { Name = "Jose", RepoUrl = "https://github.com/joseOSMB/JOSE-OSMB-SCRIPTS.git", PathRegex = ".*\\.jar$" },
+                new ScriptDeveloper { Name = "Fru", RepoUrl = "https://github.com/fru-art/fru-scripts.git", PathRegex = ".*\\.jar$" }
             };
         }
 
@@ -187,7 +187,7 @@ public partial class MainWindow : Window
         if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(repo))
             return;
 
-        var dev = new PluginDeveloper { Name = name, RepoUrl = repo, PathRegex = regex };
+        var dev = new ScriptDeveloper { Name = name, RepoUrl = repo, PathRegex = regex };
         _developers.Add(dev);
         PopulateDevelopersList();
         await _devConfig.SaveAsync(_developers);
@@ -280,12 +280,12 @@ public partial class MainWindow : Window
         if (string.IsNullOrEmpty(target))
         {
             var installed = this.FindControl<ListBox>("InstalledListBox")!;
-            installed.ItemsSource = new List<InstalledPlugin> { new InstalledPlugin { FileName = "Please choose a target directory first." } };
+            installed.ItemsSource = new List<InstalledScript> { new InstalledScript { FileName = "Please choose a target directory first." } };
             return;
         }
 
         var installedList = this.FindControl<ListBox>("InstalledListBox")!;
-        var toUpdate = installedList.Items?.Cast<object>().OfType<InstalledPlugin>().Where(p => p.IsSelected && p.Matched).ToList() ?? new List<InstalledPlugin>();
+        var toUpdate = installedList.Items?.Cast<object>().OfType<InstalledScript>().Where(p => p.IsSelected && p.Matched).ToList() ?? new List<InstalledScript>();
         int total = toUpdate.Count;
         for (int i = 0; i < total; i++)
         {
@@ -299,8 +299,8 @@ public partial class MainWindow : Window
             catch (Exception ex)
             {
                 var list = installedList.Items?.Cast<object>().ToList() ?? new List<object>();
-                list.Add(new InstalledPlugin { FileName = "Update error: " + ex.Message });
-                installedList.ItemsSource = list.Cast<InstalledPlugin>().ToList();
+                list.Add(new InstalledScript { FileName = "Update error: " + ex.Message });
+                installedList.ItemsSource = list.Cast<InstalledScript>().ToList();
             }
         }
 
@@ -314,12 +314,12 @@ public partial class MainWindow : Window
         if (string.IsNullOrEmpty(target))
         {
             var installed = this.FindControl<ListBox>("InstalledListBox")!;
-            installed.ItemsSource = new List<InstalledPlugin> { new InstalledPlugin { FileName = "Please choose a target directory first." } };
+            installed.ItemsSource = new List<InstalledScript> { new InstalledScript { FileName = "Please choose a target directory first." } };
             return;
         }
 
         var installedList = this.FindControl<ListBox>("InstalledListBox")!;
-        var toUpdate = installedList.Items?.Cast<object>().OfType<InstalledPlugin>().Where(p => p.Matched).ToList() ?? new List<InstalledPlugin>();
+        var toUpdate = installedList.Items?.Cast<object>().OfType<InstalledScript>().Where(p => p.Matched).ToList() ?? new List<InstalledScript>();
         int total = toUpdate.Count;
         for (int i = 0; i < total; i++)
         {
@@ -333,8 +333,8 @@ public partial class MainWindow : Window
             catch (Exception ex)
             {
                 var list = installedList.Items?.Cast<object>().ToList() ?? new List<object>();
-                list.Add(new InstalledPlugin { FileName = "Update error: " + ex.Message });
-                installedList.ItemsSource = list.Cast<InstalledPlugin>().ToList();
+                list.Add(new InstalledScript { FileName = "Update error: " + ex.Message });
+                installedList.ItemsSource = list.Cast<InstalledScript>().ToList();
             }
         }
 
@@ -369,7 +369,7 @@ public partial class MainWindow : Window
         ClearStatus();
     }
 
-    private async Task LoadJarsForDeveloperAsync(PluginDeveloper dev)
+    private async Task LoadJarsForDeveloperAsync(ScriptDeveloper dev)
     {
         var jarsList = this.FindControl<ListBox>("JarsListBox")!;
         SetStatus($"Scanning {dev.Name}...", indeterminate: true);
@@ -394,8 +394,8 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             // show error as a single item
-            var err = new TrackedJar { RelativePath = "Error scanning repo: " + ex.Message, CommitId = string.Empty, Status = "" };
-            jarsList.ItemsSource = new List<TrackedJar> { err };
+            var err = new TrackedScript { RelativePath = "Error scanning repo: " + ex.Message, CommitId = string.Empty, Status = "" };
+            jarsList.ItemsSource = new List<TrackedScript> { err };
             SetStatus("Error scanning repo: " + ex.Message);
         }
     }
@@ -406,18 +406,18 @@ public partial class MainWindow : Window
         var installedList = this.FindControl<ListBox>("InstalledListBox")!;
         if (string.IsNullOrEmpty(target) || !Directory.Exists(target))
         {
-            installedList.ItemsSource = new List<InstalledPlugin> { new InstalledPlugin { FileName = "Please choose a valid target directory." } };
+            installedList.ItemsSource = new List<InstalledScript> { new InstalledScript { FileName = "Please choose a valid target directory." } };
             return;
         }
 
-        SetStatus("Scanning installed plugins...", indeterminate: true);
+        SetStatus("Scanning installed scripts...", indeterminate: true);
 
         var files = Directory.EnumerateFiles(target, "*.jar", SearchOption.TopDirectoryOnly).ToList();
-        var installed = new List<InstalledPlugin>();
+        var installed = new List<InstalledScript>();
         foreach (var f in files)
         {
             var fileName = Path.GetFileName(f);
-            var p = new InstalledPlugin { FileName = fileName, FullPath = f };
+            var p = new InstalledScript { FileName = fileName, FullPath = f };
 
             // try to match against cached repo jars
             bool matched = false;
@@ -614,12 +614,12 @@ public partial class MainWindow : Window
         if (string.IsNullOrEmpty(target))
         {
             var jarsList = this.FindControl<ListBox>("JarsListBox")!;
-            jarsList.ItemsSource = new List<TrackedJar> { new TrackedJar { RelativePath = "Please choose a target directory first." } };
+            jarsList.ItemsSource = new List<TrackedScript> { new TrackedScript { RelativePath = "Please choose a target directory first." } };
             return;
         }
 
         var jarsList2 = this.FindControl<ListBox>("JarsListBox")!;
-        var jarsItems = jarsList2.Items?.Cast<object>().OfType<TrackedJar>().Where(j => j.IsSelected).ToList() ?? new List<TrackedJar>();
+        var jarsItems = jarsList2.Items?.Cast<object>().OfType<TrackedScript>().Where(j => j.IsSelected).ToList() ?? new List<TrackedScript>();
         foreach (var jar in jarsItems)
         {
             try
@@ -632,8 +632,8 @@ public partial class MainWindow : Window
             {
                 // append error item to the list
                 var list = jarsList2.Items?.Cast<object>().ToList() ?? new List<object>();
-                list.Add(new TrackedJar { RelativePath = "Download error: " + ex.Message });
-                jarsList2.ItemsSource = list.Cast<TrackedJar>().ToList();
+                list.Add(new TrackedScript { RelativePath = "Download error: " + ex.Message });
+                jarsList2.ItemsSource = list.Cast<TrackedScript>().ToList();
             }
         }
 

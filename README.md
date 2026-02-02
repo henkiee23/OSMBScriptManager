@@ -1,6 +1,6 @@
-# OSMB Plugin Updater
+# OSMB Script Updater
 
-Small desktop tool to scan git repositories for .jar plugin files, track commit IDs per plugin, and download selected plugins to a target folder.
+Small desktop tool to scan git repositories for .jar script files, track commit IDs per script, and download selected scripts to a target folder.
 
 Quick notes:
 - This is a .NET 9 / Avalonia UI application. Build with `dotnet build`.

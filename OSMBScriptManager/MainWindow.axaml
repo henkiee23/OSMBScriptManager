@@ -10,11 +10,11 @@
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="12" Spacing="8" VerticalAlignment="Center">
             <TextBlock Text="Target folder:" VerticalAlignment="Center"/>
             <TextBox Name="TargetDirTextBox" Width="440" />
-            <Button Name="BrowseButton" Content="Browse..." ToolTip.Tip="Select target plugins folder"/>
+            <Button Name="BrowseButton" Content="Browse..." ToolTip.Tip="Select target scripts folder"/>
         </StackPanel>
 
         <TabControl Grid.Row="1" Margin="8">
-            <TabItem Header="Installed Plugins">
+            <TabItem Header="Installed Scripts">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -44,7 +44,7 @@
 
                     <ListBox Grid.Row="1" Name="InstalledListBox" ScrollViewer.VerticalScrollBarVisibility="Auto" Margin="0,0,0,4">
                         <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="models:InstalledPlugin">
+                            <DataTemplate x:DataType="models:InstalledScript">
                                 <Border CornerRadius="6" Margin="0,6" Padding="10">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -69,8 +69,8 @@
             <TabItem Header="Repositories">
                 <Grid ColumnDefinitions="2*,5*">
                     <Border Grid.Column="0" Padding="12" CornerRadius="6" Margin="8">
-                        <StackPanel Spacing="8">
-                            <TextBlock Classes="header" Text="Plugin Developers"/>
+                            <StackPanel Spacing="8">
+                            <TextBlock Classes="header" Text="Script Developers"/>
                             <ListBox Name="DevelopersListBox" Height="260"/>
 
                             <TextBlock Text="Name" Margin="0,8,0,0"/>
@@ -95,11 +95,11 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Row="0" Classes="header" Text="Available Plugins"/>
+                        <TextBlock Grid.Row="0" Classes="header" Text="Available Scripts"/>
 
                         <ListBox Grid.Row="1" Name="JarsListBox" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" ScrollViewer.VerticalScrollBarVisibility="Auto">
                             <ListBox.ItemTemplate>
-                                <DataTemplate x:DataType="models:TrackedJar">
+                                <DataTemplate x:DataType="models:TrackedScript">
                                     <Border CornerRadius="6" Margin="0,6" Padding="10">
                                         <Grid>
                                             <Grid.ColumnDefinitions>

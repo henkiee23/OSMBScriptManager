@@ -43,9 +43,9 @@ public class GitRepoService
         return temp;
     }
 
-    public async Task<List<TrackedJar>> ScanRepoAsync(Models.PluginDeveloper dev)
+    public async Task<List<TrackedScript>> ScanRepoAsync(Models.ScriptDeveloper dev)
     {
-        var result = new List<TrackedJar>();
+        var result = new List<TrackedScript>();
         string temp = await CloneRepoToTemp(dev.RepoUrl);
         try
         {
@@ -61,7 +61,7 @@ public class GitRepoService
                 var (code, outp, err) = await RunGit(temp, $"log -n 1 --pretty=format:%H -- \"{rel}\"");
                 string commit = code == 0 ? outp.Split('\n')[0] : string.Empty;
 
-                result.Add(new TrackedJar
+                result.Add(new TrackedScript
                 {
                     RepoUrl = dev.RepoUrl,
                     RelativePath = rel,
