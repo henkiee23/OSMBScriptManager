@@ -163,7 +163,7 @@ public partial class MainWindow : Window
             {
                 var cur = GetCurrentVersionString();
                 var isDev = App.IsDevelopmentBuild();
-                versionTb.Text = "Version: " + cur + (isDev ? " (development build — auto-update disabled)" : string.Empty);
+                versionTb.Text = cur + (isDev ? " (development build — auto-update disabled)" : string.Empty);
             }
         }
         catch { }
@@ -388,7 +388,14 @@ public partial class MainWindow : Window
         if (string.IsNullOrEmpty(tagOrVersion)) return null;
         var t = tagOrVersion.Trim();
         if (t.StartsWith("v", StringComparison.OrdinalIgnoreCase)) t = t.Substring(1);
-        if (Version.TryParse(t, out var v)) return v;
+        // strip build metadata or prerelease suffix
+        var plusIdx = t.IndexOf('+'); if (plusIdx >= 0) t = t.Substring(0, plusIdx);
+        var dashIdx = t.IndexOf('-'); if (dashIdx >= 0) t = t.Substring(0, dashIdx);
+        // match leading numeric version tokens
+        var m = System.Text.RegularExpressions.Regex.Match(t, "^(?<ver>\\d+(?:\\.\\d+){0,2})");
+        if (!m.Success) return null;
+        var ver = m.Groups["ver"].Value;
+        if (Version.TryParse(ver, out var v2)) return v2;
         return null;
     }
 

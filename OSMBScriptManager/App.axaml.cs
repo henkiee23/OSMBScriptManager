@@ -239,14 +239,23 @@ public partial class App : Application
 
     private static int CompareVersionStrings(string a, string b)
     {
-        // parse numeric major.minor.patch components, ignore extras
+        // parse numeric major.minor.patch components from the start of the string (ignore pre-release and build metadata)
         int[] Parse(string s)
         {
             var nums = new int[3];
             if (string.IsNullOrEmpty(s)) return nums;
             s = s.Trim();
             if (s.StartsWith("v", StringComparison.OrdinalIgnoreCase)) s = s.Substring(1);
-            var parts = s.Split(new[] {'.','-'}, StringSplitOptions.RemoveEmptyEntries);
+            // remove any +build or -prerelease suffix
+            var cutIdx = s.IndexOf('+');
+            if (cutIdx >= 0) s = s.Substring(0, cutIdx);
+            cutIdx = s.IndexOf('-');
+            if (cutIdx >= 0) s = s.Substring(0, cutIdx);
+            // match leading numeric version tokens
+            var m = System.Text.RegularExpressions.Regex.Match(s, "^(?<ver>\\d+(?:\\.\\d+){0,2})");
+            if (!m.Success) return nums;
+            var ver = m.Groups["ver"].Value;
+            var parts = ver.Split('.');
             for (int i = 0; i < Math.Min(3, parts.Length); i++)
             {
                 if (int.TryParse(parts[i], out var n)) nums[i] = n;
