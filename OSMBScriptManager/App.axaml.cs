@@ -300,15 +300,38 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
-    private static string GetCurrentVersionString()
+    public static string GetCurrentVersionString()
     {
         try
         {
             var asm = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
-            var fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(asm.Location);
-            if (!string.IsNullOrEmpty(fvi.ProductVersion)) return fvi.ProductVersion;
-            var v = asm.GetName().Version;
-            return v?.ToString() ?? "0.0.0";
+            if (asm != null)
+            {
+                // prefer informational version attribute
+                var infoAttr = asm.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>();
+                if (infoAttr != null && !string.IsNullOrEmpty(infoAttr.InformationalVersion))
+                    return infoAttr.InformationalVersion;
+
+                var fileAttr = asm.GetCustomAttribute<System.Reflection.AssemblyFileVersionAttribute>();
+                if (fileAttr != null && !string.IsNullOrEmpty(fileAttr.Version))
+                    return fileAttr.Version;
+
+                try
+                {
+                    var loc = asm.Location;
+                    if (!string.IsNullOrEmpty(loc))
+                    {
+                        var fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(loc);
+                        if (!string.IsNullOrEmpty(fvi.ProductVersion)) return fvi.ProductVersion;
+                    }
+                }
+                catch { }
+
+                var v = asm.GetName().Version;
+                if (v != null) return v.ToString();
+            }
+
+            return "0.0.0";
         }
         catch
         {
@@ -343,7 +366,7 @@ public partial class App : Application
         return 0;
     }
 
-    private static bool IsDevelopmentBuild()
+    public static bool IsDevelopmentBuild()
     {
         try
         {
@@ -351,12 +374,20 @@ public partial class App : Application
             if (string.IsNullOrEmpty(s)) return true;
             var t = s.Trim();
             if (t.StartsWith("v", StringComparison.OrdinalIgnoreCase)) t = t.Substring(1);
+            // treat only explicit 0.0.0 (or unversioned/unparsable) as development
             if (t == "0.0.0" || t == "0.0.0.0" || t == "0.0") return true;
-            if (Version.TryParse(t, out var v))
+            // strip any pre-release/build metadata and parse the leading numeric version
+            var m = System.Text.RegularExpressions.Regex.Match(t, "^(?<ver>\\d+(\\.\\d+){1,2})");
+            if (m.Success)
             {
-                return v.Major == 0 && v.Minor == 0 && (v.Build == 0 || v.Build == -1);
+                var num = m.Groups["ver"].Value;
+                if (Version.TryParse(num, out var v))
+                {
+                    // consider development only when version is 0.0.x
+                    return v.Major == 0 && v.Minor == 0 && (v.Build == 0 || v.Build == -1);
+                }
             }
-            // if we cannot parse a reasonable version, treat as development
+            // if we cannot parse a reasonable numeric prefix, treat as development
             return true;
         }
         catch

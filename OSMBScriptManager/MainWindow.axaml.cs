@@ -173,17 +173,7 @@ public partial class MainWindow : Window
             if (versionTb != null)
             {
                 var cur = GetCurrentVersionString();
-                var parsed = NormalizeVersion(cur);
-                var isDev = false;
-                if (parsed != null)
-                    isDev = parsed.Major == 0 && parsed.Minor == 0 && (parsed.Build == 0 || parsed.Build == -1);
-                else
-                {
-                    var t = cur ?? string.Empty;
-                    if (t.StartsWith("v", StringComparison.OrdinalIgnoreCase)) t = t.Substring(1);
-                    isDev = string.IsNullOrEmpty(t) || t == "0.0.0" || t == "0.0.0.0";
-                }
-
+                var isDev = App.IsDevelopmentBuild();
                 versionTb.Text = "Version: " + cur + (isDev ? " (development build — auto-update disabled)" : string.Empty);
             }
         }
@@ -400,18 +390,8 @@ public partial class MainWindow : Window
 
     private string GetCurrentVersionString()
     {
-        try
-        {
-            var asm = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
-            var fvi = FileVersionInfo.GetVersionInfo(asm.Location);
-            if (!string.IsNullOrEmpty(fvi.ProductVersion)) return fvi.ProductVersion;
-            var v = asm.GetName().Version;
-            return v?.ToString() ?? "0.0.0";
-        }
-        catch
-        {
-            return "0.0.0";
-        }
+        // delegate to App's version helper for consistency
+        try { return App.GetCurrentVersionString(); } catch { return "0.0.0"; }
     }
 
     private static Version? NormalizeVersion(string tagOrVersion)
