@@ -53,6 +53,28 @@ public partial class MainWindow : Window
         // load saved state
         _savedState = await _persistence.LoadStateAsync();
 
+        // If persistence previously fell back to LocalAppData, show a short notification.
+        try
+        {
+            var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var marker = Path.Combine(localAppData, "OSMBScriptManager", "persistence_fallback.txt");
+            if (File.Exists(marker))
+            {
+                // Read and then remove the marker so we only notify once.
+                try
+                {
+                    var txt = await File.ReadAllTextAsync(marker);
+                    await Dispatcher.UIThread.InvokeAsync(() => SetStatus("Storage fallback: using local app data (settings stored in %LOCALAPPDATA%).", indeterminate: false));
+                    // show for a few seconds
+                    await Task.Delay(4_000);
+                    await Dispatcher.UIThread.InvokeAsync(() => ClearStatus());
+                }
+                catch { }
+                try { File.Delete(marker); } catch { }
+            }
+        }
+        catch { }
+
         // load developers from config
         var loaded = await _devConfig.LoadAsync();
         if (loaded != null && loaded.Count > 0)
