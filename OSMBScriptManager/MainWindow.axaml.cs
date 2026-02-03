@@ -600,6 +600,7 @@ public partial class MainWindow : Window
                     p.RepoUrl = repoUrl;
                     p.RelativePath = match.RelativePath;
                     p.RepoCommitId = match.CommitId ?? string.Empty;
+                    p.RepoCommitDate = match.CommitDate ?? string.Empty;
                     var key = StateKey(repoUrl, match.RelativePath);
                     _savedState.TryGetValue(key, out var saved);
                     p.SavedCommitId = saved ?? string.Empty;

@@ -10,6 +10,7 @@ public class TrackedScript
     public string RelativePath { get; set; } = string.Empty;
     public string FileName => Path.GetFileName(RelativePath);
     public string CommitId { get; set; } = string.Empty;
+    public string CommitDate { get; set; } = string.Empty;
     public bool IsSelected { get; set; }
     public string Status { get; set; } = string.Empty;
 }

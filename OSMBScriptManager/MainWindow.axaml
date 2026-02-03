@@ -41,13 +41,15 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="3*"/>
                                     <ColumnDefinition Width="2*"/>
+                                    <ColumnDefinition Width="2*"/>
                                     <ColumnDefinition Width="3*"/>
                                 </Grid.ColumnDefinitions>
                                 <!-- placeholder box to reserve space for the item checkbox -->
                                 <Border Grid.Column="0" Width="24" Background="Transparent" VerticalAlignment="Center" Margin="0,0,8,0" />
                                 <TextBlock Grid.Column="1" Text="File" FontWeight="Bold" VerticalAlignment="Center" Margin="8,0"/>
                                 <TextBlock Grid.Column="2" Text="Status" FontWeight="Bold" VerticalAlignment="Center" Margin="8,0"/>
-                                <TextBlock Grid.Column="3" Text="Repository" FontWeight="Bold" VerticalAlignment="Center" Margin="8,0"/>
+                                <TextBlock Grid.Column="3" Text="Release date" FontWeight="Bold" VerticalAlignment="Center" Margin="8,0"/>
+                                <TextBlock Grid.Column="4" Text="Repository" FontWeight="Bold" VerticalAlignment="Center" Margin="8,0"/>
                             </Grid>
                         </Border>
 
@@ -60,13 +62,15 @@
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="3*"/>
                                                 <ColumnDefinition Width="2*"/>
+                                                <ColumnDefinition Width="2*"/>
                                                 <ColumnDefinition Width="3*"/>
                                             </Grid.ColumnDefinitions>
 
                                             <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,8,0" Width="24" HorizontalAlignment="Left"/>
                                             <TextBlock Grid.Column="1" Text="{Binding FileName}" VerticalAlignment="Center" Margin="8,0"/>
                                             <TextBlock Grid.Column="2" Text="{Binding Status}" VerticalAlignment="Center" Margin="8,0"/>
-                                            <TextBlock Grid.Column="3" Text="{Binding RepoUrl}" VerticalAlignment="Center" Margin="8,0"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding RepoCommitDate}" VerticalAlignment="Center" Margin="8,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding RepoCommitId}"/>
+                                            <TextBlock Grid.Column="4" Text="{Binding RepoUrl}" VerticalAlignment="Center" Margin="8,0"/>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
@@ -122,7 +126,7 @@
                                     <!-- placeholder box to reserve space for the item checkbox -->
                                     <Border Grid.Column="0" Width="24" Background="Transparent" VerticalAlignment="Center" Margin="0,0,8,0" />
                                     <TextBlock Grid.Column="1" Text="Script name" FontWeight="Bold" VerticalAlignment="Center" Margin="8,0"/>
-                                    <TextBlock Grid.Column="2" Text="Commit" FontWeight="Bold" VerticalAlignment="Center" Margin="8,0"/>
+                                    <TextBlock Grid.Column="2" Text="Release date" FontWeight="Bold" VerticalAlignment="Center" Margin="8,0"/>
                                     <TextBlock Grid.Column="3" Text="Status" FontWeight="Bold" VerticalAlignment="Center" Margin="8,0"/>
                                 </Grid>
                             </Border>
@@ -141,7 +145,7 @@
 
                                                 <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Width="24" HorizontalAlignment="Left"/>
                                                 <TextBlock Grid.Column="1" Text="{Binding FileName}" VerticalAlignment="Center" Margin="8,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left"/>
-                                                <TextBlock Grid.Column="2" Text="{Binding CommitId}" VerticalAlignment="Center" Margin="8,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" FontFamily="Consolas" HorizontalAlignment="Left"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding CommitDate}" VerticalAlignment="Center" Margin="8,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" ToolTip.Tip="{Binding CommitId}"/>
                                                 <TextBlock Grid.Column="3" Text="{Binding Status}" VerticalAlignment="Center" Margin="8,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left"/>
                                             </Grid>
                                         </Border>

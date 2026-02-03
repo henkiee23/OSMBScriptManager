@@ -10,6 +10,7 @@ public class InstalledScript
     public string RepoUrl { get; set; } = string.Empty;
     public string RelativePath { get; set; } = string.Empty;
     public string RepoCommitId { get; set; } = string.Empty;
+    public string RepoCommitDate { get; set; } = string.Empty;
     public string SavedCommitId { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public bool IsSelected { get; set; }

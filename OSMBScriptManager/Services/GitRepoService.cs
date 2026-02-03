@@ -58,14 +58,23 @@ public class GitRepoService
                     continue;
 
                 // get last commit for the file
-                var (code, outp, err) = await RunGit(temp, $"log -n 1 --pretty=format:%H -- \"{rel}\"");
-                string commit = code == 0 ? outp.Split('\n')[0] : string.Empty;
+                var (code, outp, err) = await RunGit(temp, $"log -n 1 --pretty=format:%H|%cs -- \"{rel}\"");
+                string commit = string.Empty;
+                string commitDate = string.Empty;
+                if (code == 0)
+                {
+                    var line = outp.Split('\n')[0];
+                    var parts = line.Split('|', 2);
+                    if (parts.Length > 0) commit = parts[0];
+                    if (parts.Length > 1) commitDate = parts[1];
+                }
 
                 result.Add(new TrackedScript
                 {
                     RepoUrl = dev.RepoUrl,
                     RelativePath = rel,
                     CommitId = commit,
+                    CommitDate = commitDate,
                     Status = string.IsNullOrEmpty(commit) ? "Unknown" : "Found"
                 });
             }
