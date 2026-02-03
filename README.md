@@ -74,4 +74,4 @@ Settings are automatically managed through the UI, but advanced users can edit:
 
 ## License
 
-Licensed under Apache-2.0 and MIT (dual license). See [LICENSE](LICENSE) and [LICENSE-APACHE-2.0](LICENSE-APACHE-2.0) files.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
