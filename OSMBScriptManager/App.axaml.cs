@@ -21,6 +21,19 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        // Global exception handlers to show user-friendly error dialog and write logs
+        AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+        {
+            var ex = e.ExceptionObject as Exception;
+            _ = HandleUnhandledExceptionAsync(ex);
+        };
+
+        TaskScheduler.UnobservedTaskException += (s, e) =>
+        {
+            _ = HandleUnhandledExceptionAsync(e.Exception);
+            e.SetObserved();
+        };
+
         // Font glyph registration removed: app will not register embedded Font Awesome fonts.
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -196,6 +209,40 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private static async System.Threading.Tasks.Task HandleUnhandledExceptionAsync(Exception? ex)
+    {
+        try
+        {
+            var logs = System.IO.Path.Combine(AppContext.BaseDirectory ?? System.IO.Directory.GetCurrentDirectory(), "logs");
+            try { System.IO.Directory.CreateDirectory(logs); } catch { }
+            var file = System.IO.Path.Combine(logs, $"crash_{DateTime.UtcNow:yyyyMMdd_HHmmss}.txt");
+            try { System.IO.File.WriteAllText(file, ex?.ToString() ?? "(null)"); } catch { }
+
+            // show dialog on UI thread if possible
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                try
+                {
+                    var dlg = new Views.ErrorDialog("Unexpected error", ex?.Message ?? "An unexpected error occurred.", ex?.ToString() ?? string.Empty);
+                    if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                    {
+                        var owner = desktop.MainWindow;
+                        if (owner != null)
+                        {
+                            dlg.ShowDialog(owner);
+                            return;
+                        }
+                    }
+
+                    // fallback
+                    dlg.Show();
+                }
+                catch { }
+            });
+        }
+        catch { }
     }
 
     public static string GetCurrentVersionString()
