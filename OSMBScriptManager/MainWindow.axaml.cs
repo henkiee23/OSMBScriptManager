@@ -241,6 +241,13 @@ public partial class MainWindow : Window
 
     private async void UpdateInstalledButton_Click(object? sender, RoutedEventArgs e)
     {
+        try
+        {
+            
+        
+        
+        
+        
         var target = this.FindControl<TextBox>("TargetDirTextBox")!.Text;
         if (string.IsNullOrEmpty(target))
         {
@@ -271,10 +278,19 @@ public partial class MainWindow : Window
 
         await _persistence.SaveStateAsync(_savedState);
         await ScanInstalledPluginsAsync();
+        }
+        catch (Exception ex)
+        {
+            await App.ReportUnhandledException(ex);
+            SetStatus("Unexpected error: " + ex.Message);
+        }
     }
 
     private async void UpdateAllInstalledButton_Click(object? sender, RoutedEventArgs e)
     {
+        try
+        {
+            
         var target = this.FindControl<TextBox>("TargetDirTextBox")!.Text;
         if (string.IsNullOrEmpty(target))
         {
@@ -305,10 +321,19 @@ public partial class MainWindow : Window
 
         await _persistence.SaveStateAsync(_savedState);
         await ScanInstalledPluginsAsync();
+        }
+        catch (Exception ex)
+        {
+            await App.ReportUnhandledException(ex);
+            SetStatus("Unexpected error: " + ex.Message);
+        }
     }
 
     private async void DeleteInstalledButton_Click(object? sender, RoutedEventArgs e)
     {
+        try
+        {
+            
         var installedList = this.FindControl<ListBox>("InstalledListBox")!;
         var toDelete = installedList.Items?.Cast<object>().OfType<InstalledScript>().Where(p => p.IsSelected).ToList() ?? new List<InstalledScript>();
         if (toDelete.Count == 0)
@@ -352,10 +377,19 @@ public partial class MainWindow : Window
         await _persistence.SaveStateAsync(_savedState);
         await ScanInstalledPluginsAsync();
         SetStatus($"Deleted {deleted} file(s).");
+        }
+        catch (Exception ex)
+        {
+            await App.ReportUnhandledException(ex);
+            SetStatus("Unexpected error: " + ex.Message);
+        }
     }
 
     private async Task BackgroundFetchAllReposAsync()
     {
+        try
+        {
+            
         int total = _developers.Count;
         for (int i = 0; i < total; i++)
         {
@@ -379,6 +413,12 @@ public partial class MainWindow : Window
         }
 
         ClearStatus();
+        }
+        catch (Exception ex)
+        {
+            await App.ReportUnhandledException(ex);
+            ClearStatus();
+        }
     }
 
     private string GetCurrentVersionString()
@@ -687,6 +727,9 @@ public partial class MainWindow : Window
 
     private async void DownloadButton_Click(object? sender, RoutedEventArgs e)
     {
+        try
+        {
+            
         var target = this.FindControl<TextBox>("TargetDirTextBox")!.Text;
         if (string.IsNullOrEmpty(target))
         {
@@ -736,5 +779,11 @@ public partial class MainWindow : Window
 
         SetStatus($"Installed {total} script(s).", indeterminate: false, progress: 1);
         if (installBtn != null) installBtn.IsEnabled = true;
+        }
+        catch (Exception ex)
+        {
+            await App.ReportUnhandledException(ex);
+            SetStatus("Unexpected error: " + ex.Message);
+        }
     }
 }

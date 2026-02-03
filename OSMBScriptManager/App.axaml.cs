@@ -25,12 +25,12 @@ public partial class App : Application
         AppDomain.CurrentDomain.UnhandledException += (s, e) =>
         {
             var ex = e.ExceptionObject as Exception;
-            _ = HandleUnhandledExceptionAsync(ex);
+            _ = ReportUnhandledException(ex);
         };
 
         TaskScheduler.UnobservedTaskException += (s, e) =>
         {
-            _ = HandleUnhandledExceptionAsync(e.Exception);
+            _ = ReportUnhandledException(e.Exception);
             e.SetObserved();
         };
 
@@ -211,7 +211,7 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
-    private static async System.Threading.Tasks.Task HandleUnhandledExceptionAsync(Exception? ex)
+    public static async System.Threading.Tasks.Task ReportUnhandledException(Exception? ex)
     {
         try
         {
