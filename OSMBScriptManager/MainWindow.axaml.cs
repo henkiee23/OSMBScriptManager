@@ -62,10 +62,14 @@ public partial class MainWindow : Window
             // fallback sample
             _developers = new List<ScriptDeveloper>
             {
-                new ScriptDeveloper { Name = "JustDavyy", RepoUrl = "https://github.com/JustDavyy/osmb-scripts.git", PathRegex = ".*\\.jar$" },
+                new ScriptDeveloper { Name = "Davyy", RepoUrl = "https://github.com/JustDavyy/osmb-scripts.git", PathRegex = ".*\\.jar$" },
+                new ScriptDeveloper { Name = "Sainty", RepoUrl = "https://github.com/ytniaS/SaintyScripts.git", PathRegex = ".*\\.jar$" },
+                new ScriptDeveloper { Name = "Tidal", RepoUrl = "https://github.com/Manokit/tidals-scripts.git", PathRegex = ".*\\.jar$" },
+                new ScriptDeveloper { Name = "Kiko", RepoUrl = "https://github.com/999kiko/OSMB.git", PathRegex = ".*\\.jar$" },
+                new ScriptDeveloper { Name = "Rats", RepoUrl = "https://gitlab.com/rats_rs/osmb.git", PathRegex = ".*\\.jar$" },
                 new ScriptDeveloper { Name = "Butter", RepoUrl = "https://github.com/ButterB21/Butter-Scripts.git", PathRegex = ".*\\.jar$" },
+                new ScriptDeveloper { Name = "Fru", RepoUrl = "https://github.com/fru-art/fru-scripts.git", PathRegex = ".*\\.jar$" },
                 new ScriptDeveloper { Name = "Jose", RepoUrl = "https://github.com/joseOSMB/JOSE-OSMB-SCRIPTS.git", PathRegex = ".*\\.jar$" },
-                new ScriptDeveloper { Name = "Fru", RepoUrl = "https://github.com/fru-art/fru-scripts.git", PathRegex = ".*\\.jar$" }
             };
         }
 
