@@ -439,29 +439,46 @@ public partial class MainWindow : Window
     {
         try
         {
-            
         int total = _developers.Count;
+        
+        // Scan repos in parallel with limited concurrency (e.g., 4 at a time)
+        var semaphore = new System.Threading.SemaphoreSlim(4);
+        var tasks = new List<Task>();
+        int completed = 0;
+
         for (int i = 0; i < total; i++)
         {
-            var dev = _developers[i];
-            try
+            var index = i;
+            var dev = _developers[index];
+            
+            tasks.Add(Task.Run(async () =>
             {
-                SetStatus($"Background scan: {dev.Name} ({i + 1}/{total})", indeterminate: false, progress: total > 0 ? (double)(i + 1) / total : 0);
-                var jars = await _gitService.ScanRepoAsync(dev);
-                lock (_repoJars)
+                await semaphore.WaitAsync();
+                try
                 {
-                    _repoJars[dev.RepoUrl] = jars;
-                }
+                    System.Threading.Interlocked.Increment(ref completed);
+                    SetStatus($"Background scan: {dev.Name} ({completed}/{total})", indeterminate: false, progress: total > 0 ? (double)completed / total : 0);
+                    var jars = await _gitService.ScanRepoAsync(dev);
+                    lock (_repoJars)
+                    {
+                        _repoJars[dev.RepoUrl] = jars;
+                    }
 
-                // update installed list on UI thread so matches appear progressively
-                await Dispatcher.UIThread.InvokeAsync(async () => await ScanInstalledPluginsAsync());
-            }
-            catch
-            {
-                // ignore per-repo errors in background
-            }
+                    // update installed list on UI thread so matches appear progressively
+                    await Dispatcher.UIThread.InvokeAsync(async () => await ScanInstalledPluginsAsync());
+                }
+                catch
+                {
+                    // ignore per-repo errors in background
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            }));
         }
 
+        await Task.WhenAll(tasks);
         ClearStatus();
         }
         catch (Exception ex)
@@ -567,59 +584,73 @@ public partial class MainWindow : Window
         }
     }
 
-    private async Task ScanInstalledPluginsAsync()
+    private Task ScanInstalledPluginsAsync()
     {
         var target = this.FindControl<TextBox>("TargetDirTextBox")!.Text;
         var installedList = this.FindControl<ListBox>("InstalledListBox")!;
         if (string.IsNullOrEmpty(target) || !Directory.Exists(target))
         {
             installedList.ItemsSource = new List<InstalledScript> { new InstalledScript { FileName = "Please choose a valid target directory." } };
-            return;
+            return Task.CompletedTask;
         }
 
         SetStatus("Scanning installed scripts...", indeterminate: true);
 
         var files = Directory.EnumerateFiles(target, "*.jar", SearchOption.TopDirectoryOnly).ToList();
         var installed = new List<InstalledScript>();
+        
+        // Build a lookup dictionary for faster matching
+        var fileNameLookup = new Dictionary<string, List<(string repoUrl, TrackedScript jar)>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var kv in _repoJars)
+        {
+            var repoUrl = kv.Key;
+            var jars = kv.Value;
+            foreach (var jar in jars)
+            {
+                var fileName = Path.GetFileName(jar.RelativePath);
+                if (!fileNameLookup.ContainsKey(fileName))
+                {
+                    fileNameLookup[fileName] = new List<(string, TrackedScript)>();
+                }
+                fileNameLookup[fileName].Add((repoUrl, jar));
+            }
+        }
+
         foreach (var f in files)
         {
             var fileName = Path.GetFileName(f);
             var p = new InstalledScript { FileName = fileName, FullPath = f };
 
-            // try to match against cached repo jars
-            bool matched = false;
-            foreach (var kv in _repoJars)
+            // Use dictionary lookup instead of nested loops
+            if (fileNameLookup.TryGetValue(fileName, out var matches) && matches.Count > 0)
             {
-                var repoUrl = kv.Key;
-                var jars = kv.Value;
-                var match = jars.FirstOrDefault(j => Path.GetFileName(j.RelativePath).Equals(fileName, StringComparison.OrdinalIgnoreCase));
-                if (match != null)
-                {
-                    matched = true;
-                    p.Matched = true;
-                    p.RepoUrl = repoUrl;
-                    p.RelativePath = match.RelativePath;
-                    p.RepoCommitId = match.CommitId ?? string.Empty;
-                    p.RepoCommitDate = match.CommitDate ?? string.Empty;
-                    var key = StateKey(repoUrl, match.RelativePath);
-                    _savedState.TryGetValue(key, out var saved);
-                    p.SavedCommitId = saved ?? string.Empty;
-                    if (!string.IsNullOrEmpty(saved))
-                        p.Status = saved == p.RepoCommitId ? "Up-to-date" : $"Outdated (local {saved})";
-                    else
-                        p.Status = "Matched (not tracked)";
-                    break;
-                }
+                // Take the first match (could be enhanced to pick best match)
+                var (repoUrl, match) = matches[0];
+                
+                p.Matched = true;
+                p.RepoUrl = repoUrl;
+                p.RelativePath = match.RelativePath;
+                p.RepoCommitId = match.CommitId ?? string.Empty;
+                p.RepoCommitDate = match.CommitDate ?? string.Empty;
+                var key = StateKey(repoUrl, match.RelativePath);
+                _savedState.TryGetValue(key, out var saved);
+                p.SavedCommitId = saved ?? string.Empty;
+                if (!string.IsNullOrEmpty(saved))
+                    p.Status = saved == p.RepoCommitId ? "Up-to-date" : $"Outdated (local {saved})";
+                else
+                    p.Status = "Matched (not tracked)";
             }
-
-            if (!matched)
+            else
+            {
                 p.Status = "Unmanaged";
+            }
 
             installed.Add(p);
         }
 
         installedList.ItemsSource = installed;
         ClearStatus();
+        return Task.CompletedTask;
     }
 
     private static string StateKey(string repoUrl, string relativePath) => repoUrl + "|" + relativePath;
