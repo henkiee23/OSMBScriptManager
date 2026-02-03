@@ -5,8 +5,6 @@ using Avalonia.Threading;
 using OSMBScriptManager.Services;
 using OSMBScriptManager.Views;
 using Avalonia.Markup.Xaml;
-using Avalonia.Media;
-using System.Collections.Generic;
 using System.Reflection;
 using System;
 
@@ -211,7 +209,7 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
-    public static async System.Threading.Tasks.Task ReportUnhandledException(Exception? ex)
+    public static async Task ReportUnhandledException(Exception? ex)
     {
         try
         {

@@ -6,15 +6,12 @@ using Avalonia.Threading;
 using System;
 using Avalonia;
 using Avalonia.Styling;
-
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Reflection;
 using System.Diagnostics;
 using OSMBScriptManager.Views;
-using System.Net.Http;
 
 namespace OSMBScriptManager;
 
@@ -293,11 +290,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            
-        
-        
-        
-        
+
         var target = this.FindControl<TextBox>("TargetDirTextBox")!.Text;
         if (string.IsNullOrEmpty(target))
         {
