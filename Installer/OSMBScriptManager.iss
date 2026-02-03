@@ -17,7 +17,7 @@ PrivilegesRequired=admin
 Source: "..\publish\win-x64\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
 
 [Icons]
-Name: "{group}\OSMBScriptManager"; Filename: "{app}\OSMBScriptManager.exe"
+Name: "{group}\OSMBScriptManager"; Filename: "{app}\OSMBScriptManager.exe"; IconFilename: "{app}\OSMBScriptManager.exe"; IconIndex: 0
 
 [Run]
 Filename: "{app}\OSMBScriptManager.exe"; Description: "Launch OSMBScriptManager"; Flags: nowait postinstall skipifsilent

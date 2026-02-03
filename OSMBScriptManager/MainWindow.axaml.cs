@@ -181,6 +181,34 @@ public partial class MainWindow : Window
             };
         }
 
+        // wire auto-start setting
+        var autoStartCb = this.FindControl<CheckBox>("AutoStartCheckBox");
+        if (autoStartCb != null)
+        {
+            // Initialize the checkbox state from registry
+            var autoStartService = new AutoStartService();
+            autoStartCb.IsChecked = autoStartService.IsAutoStartEnabled();
+
+            autoStartCb.Click += async (_, __) =>
+            {
+                var autoStartService = new AutoStartService();
+                var shouldEnable = autoStartCb.IsChecked == true;
+                var success = autoStartService.SetAutoStart(shouldEnable);
+
+                if (success)
+                {
+                    var s = await _settingsService.LoadAsync();
+                    s.AutoStart = shouldEnable;
+                    await _settingsService.SaveAsync(s);
+                }
+                else
+                {
+                    // Revert checkbox if operation failed
+                    autoStartCb.IsChecked = !shouldEnable;
+                }
+            };
+        }
+
         // show current app version in settings
         try
         {

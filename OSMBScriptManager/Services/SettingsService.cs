@@ -21,6 +21,8 @@ public class Settings
     public bool EnableAutoUpdateCheck { get; set; } = true;
     // If set to a release tag (e.g. "v1.2.3"), updates matching this tag will be skipped
     public string SkipUpdateVersion { get; set; } = string.Empty;
+    // Whether to auto-start the application with Windows
+    public bool AutoStart { get; set; } = false;
 }
 
 public class SettingsService
