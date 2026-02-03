@@ -35,7 +35,7 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
-                        <Border Grid.Row="0" Padding="8" Background="{DynamicResource WindowBackgroundBrush}">
+                        <Border Grid.Row="0" Padding="10" Background="{DynamicResource WindowBackgroundBrush}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
@@ -43,9 +43,11 @@
                                     <ColumnDefinition Width="2*"/>
                                     <ColumnDefinition Width="3*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="1" Text="File" FontWeight="Bold" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="2" Text="Status" FontWeight="Bold" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="3" Text="Repository" FontWeight="Bold" VerticalAlignment="Center"/>
+                                <!-- placeholder box to reserve space for the item checkbox -->
+                                <Border Grid.Column="0" Width="24" Background="Transparent" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <TextBlock Grid.Column="1" Text="File" FontWeight="Bold" VerticalAlignment="Center" Margin="8,0"/>
+                                <TextBlock Grid.Column="2" Text="Status" FontWeight="Bold" VerticalAlignment="Center" Margin="8,0"/>
+                                <TextBlock Grid.Column="3" Text="Repository" FontWeight="Bold" VerticalAlignment="Center" Margin="8,0"/>
                             </Grid>
                         </Border>
 
@@ -61,7 +63,7 @@
                                                 <ColumnDefinition Width="3*"/>
                                             </Grid.ColumnDefinitions>
 
-                                            <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,8,0" Width="24" HorizontalAlignment="Left"/>
                                             <TextBlock Grid.Column="1" Text="{Binding FileName}" VerticalAlignment="Center" Margin="8,0"/>
                                             <TextBlock Grid.Column="2" Text="{Binding Status}" VerticalAlignment="Center" Margin="8,0"/>
                                             <TextBlock Grid.Column="3" Text="{Binding RepoUrl}" VerticalAlignment="Center" Margin="8,0"/>
@@ -108,17 +110,20 @@
                             </Grid.RowDefinitions>
 
                             <!-- Sticky header for Jars list -->
-                            <Border Grid.Row="0" Padding="8" Background="{DynamicResource WindowBackgroundBrush}">
+                            <Border Grid.Row="0" Padding="10" Background="{DynamicResource WindowBackgroundBrush}">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="5*"/>
-                                        <ColumnDefinition Width="2*"/>
-                                        <ColumnDefinition Width="2*"/>
+                                        <!-- give commits a reasonable minimum so hashes don't collapse -->
+                                        <ColumnDefinition Width="2*" MinWidth="200"/>
+                                        <ColumnDefinition Width="2*" MinWidth="120"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="1" Text="Script name" FontWeight="Bold" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="2" Text="Commit" FontWeight="Bold" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="3" Text="Status" FontWeight="Bold" VerticalAlignment="Center"/>
+                                    <!-- placeholder box to reserve space for the item checkbox -->
+                                    <Border Grid.Column="0" Width="24" Background="Transparent" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <TextBlock Grid.Column="1" Text="Script name" FontWeight="Bold" VerticalAlignment="Center" Margin="8,0"/>
+                                    <TextBlock Grid.Column="2" Text="Commit" FontWeight="Bold" VerticalAlignment="Center" Margin="8,0"/>
+                                    <TextBlock Grid.Column="3" Text="Status" FontWeight="Bold" VerticalAlignment="Center" Margin="8,0"/>
                                 </Grid>
                             </Border>
 
@@ -134,10 +139,10 @@
                                                     <ColumnDefinition Width="2*"/>
                                                 </Grid.ColumnDefinitions>
 
-                                                <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center"/>
-                                                <TextBlock Grid.Column="1" Text="{Binding FileName}" VerticalAlignment="Center" Margin="8,0"/>
-                                                <TextBlock Grid.Column="2" Text="{Binding CommitId}" VerticalAlignment="Center" Margin="8,0"/>
-                                                <TextBlock Grid.Column="3" Text="{Binding Status}" VerticalAlignment="Center" Margin="8,0"/>
+                                                <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Width="24" HorizontalAlignment="Left"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding FileName}" VerticalAlignment="Center" Margin="8,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding CommitId}" VerticalAlignment="Center" Margin="8,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" FontFamily="Consolas" HorizontalAlignment="Left"/>
+                                                <TextBlock Grid.Column="3" Text="{Binding Status}" VerticalAlignment="Center" Margin="8,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left"/>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
